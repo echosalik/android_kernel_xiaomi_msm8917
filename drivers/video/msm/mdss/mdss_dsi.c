@@ -1,4 +1,4 @@
-/* Copyright (c) 2012-2017, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2012-2018, The Linux Foundation. All rights reserved.
  * Copyright (C) 2018 XiaoMi, Inc.
  *
  * This program is free software; you can redistribute it and/or modify
@@ -41,7 +41,6 @@ struct mutex gamma_lock;
 struct mutex ce_lock;
 struct mutex eye_lock;
 struct mutex cabc_lock;
-
 
 #define CMDLINE_DSI_CTL_NUM_STRING_LEN 2
 
@@ -301,7 +300,7 @@ static int mdss_dsi_panel_power_off(struct mdss_panel_data *pdata)
 		pr_warn("%s: Panel reset failed. rc=%d\n", __func__, ret);
 		ret = 0;
 	}
-
+	
 	usleep(500);
 
 	if (mdss_dsi_pinctrl_set_state(ctrl_pdata, false))
@@ -358,6 +357,7 @@ static int mdss_dsi_panel_power_on(struct mdss_panel_data *pdata)
 			pr_err("%s: Panel reset failed. rc=%d\n",
 					__func__, ret);
 	}
+
 	return ret;
 }
 
@@ -674,7 +674,7 @@ static ssize_t mdss_dsi_cmd_state_read(struct file *file, char __user *buf,
 	if (blen < 0)
 		return 0;
 
-	if (copy_to_user(buf, buffer, blen))
+	if (copy_to_user(buf, buffer, min(count, (size_t)blen+1)))
 		return -EFAULT;
 
 	*ppos += blen;
@@ -2842,13 +2842,14 @@ static struct device_node *mdss_dsi_find_panel_of_node(
 					cfg_np_name, MDSS_MAX_PANEL_LEN);
 			}
 		}
+
 		is_Lcm_Present = true;
 		return dsi_pan_node;
 	}
 end:
 	if (strcmp(panel_name, NONE_PANEL))
 		dsi_pan_node = mdss_dsi_pref_prim_panel(pdev);
-		 is_Lcm_Present = false;
+	is_Lcm_Present = false;
 exit:
 	return dsi_pan_node;
 }
@@ -3707,6 +3708,7 @@ static int mdss_dsi_probe(struct platform_device *pdev)
 		pr_err("%s: Invalid DSI hw configuration\n", __func__);
 		goto error;
 	}
+
 	mutex_init(&gamma_lock);
 	mutex_init(&ce_lock);
 	mutex_init(&eye_lock);
